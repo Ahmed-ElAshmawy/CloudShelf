@@ -18,8 +18,4 @@
     <ProjectReference Include="..\CloudShift.Kernel\CloudShift.Kernel.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="logs\" />
-  </ItemGroup>
-
 </Project>

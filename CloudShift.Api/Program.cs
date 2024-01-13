@@ -6,10 +6,9 @@ using CloudShift.Kernel.Application.Http;
 using CloudShift.Kernel.Middleware;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Net.Http.Headers;
+using Microsoft.OpenApi.Models;
 using Serilog;
-using System;
 
 internal class Program
 {
@@ -37,20 +36,46 @@ internal class Program
 
         builder.Services.AddAuthorization();
 
-        builder.Services.AddIdentityApiEndpoints<IdentityUser>(config => 
-        { 
+        builder.Services.AddIdentityApiEndpoints<IdentityUser>(config =>
+        {
             config.Password.RequiredLength = 3;
-            config.Password.RequireNonAlphanumeric= false;
+            config.Password.RequireNonAlphanumeric = false;
             config.Password.RequiredUniqueChars = 0;
-            config.Password.RequireUppercase= false;
-            config.Password.RequireLowercase= false;
+            config.Password.RequireUppercase = false;
+            config.Password.RequireLowercase = false;
         })
             .AddEntityFrameworkStores<CloudShiftDbContext>();
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen(option =>
+        {
+            option.SwaggerDoc("v1", new OpenApiInfo { Title = "CloudShelf API", Version = "v1" });
+            option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter a valid token",
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                BearerFormat = "JWT",
+                Scheme = "Bearer"
+            });
+            option.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type=ReferenceType.SecurityScheme,
+                            Id="Bearer"
+                        }
+                    },
+                    new string[]{}
+                }
+            });
+        });
+
         builder.Host.UseSerilog((context, services, configuration) => configuration
                     .ReadFrom.Configuration(context.Configuration)
                     .ReadFrom.Services(services)
